@@ -59,5 +59,3 @@ A web application to analyze and visualize your WhatsApp chat exports with inter
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details
-
-Analizing chat statistics
