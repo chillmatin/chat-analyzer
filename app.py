@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from chat import WhatsAppChat
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 # Page config
 st.set_page_config(
@@ -514,6 +516,60 @@ elif page == "Content Analysis":
     selected_participant = st.selectbox("Filter by Participant", participants_list)
     
     filter_participant = None if selected_participant == 'All Participants' else selected_participant
+    
+    # Word Cloud
+    st.subheader("Word Cloud" + (f" - {selected_participant}" if filter_participant else ""))
+    
+    # Generate word cloud
+    word_freq = chat.get_word_frequency(200, participant=filter_participant)
+    
+    if word_freq:
+        # Try to find a unicode-compatible font
+        import os
+        font_path = None
+        
+        # Common unicode font paths on different systems
+        possible_fonts = [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',  # Linux
+            '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',  # macOS
+            'C:\\Windows\\Fonts\\Arial.ttf',  # Windows
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',  # Linux alternative
+            '/usr/share/fonts/google-noto/NotoSans-Regular.ttf',  # Noto Sans
+        ]
+        
+        for font in possible_fonts:
+            if os.path.exists(font):
+                font_path = font
+                break
+        
+        # Generate word cloud with unicode support
+        wordcloud_params = {
+            'width': 1200,
+            'height': 600,
+            'background_color': 'white',
+            'colormap': 'viridis',
+            'relative_scaling': 0.5,
+            'min_font_size': 10,
+            'max_words': 200,
+            'collocations': False  # Avoid word pairs
+        }
+        
+        if font_path:
+            wordcloud_params['font_path'] = font_path
+        
+        wordcloud = WordCloud(**wordcloud_params).generate_from_frequencies(word_freq)
+        
+        # Create matplotlib figure
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.imshow(wordcloud, interpolation='bilinear')
+        ax.axis('off')
+        plt.tight_layout(pad=0)
+        st.pyplot(fig)
+        plt.close()
+    else:
+        st.info("No words available for word cloud")
+    
+    st.divider()
     
     # Top words
     st.subheader("Most Frequent Words" + (f" - {selected_participant}" if filter_participant else ""))

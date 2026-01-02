@@ -34,15 +34,16 @@ class WhatsAppChat:
         end_date: Last message timestamp
     """
     
-    # Regex pattern for WhatsApp messages
-    # Format: [DD.MM.YYYY, HH:MM:SS] Sender: Message
+    # Regex patterns for WhatsApp messages - support multiple date formats
+    # Format 1: [DD.MM.YYYY, HH:MM:SS] or [DD.MM.YY, HH:MM:SS]
     MESSAGE_PATTERN = re.compile(
-        r'^\[?(\d{2}\.\d{2}\.\d{4}),\s+(\d{2}:\d{2}:\d{2})\]\s+([^:]+):\s+(.*)$',
+        r'^\[?(\d{2}\.\d{2}\.\d{2,4}),\s+(\d{1,2}:\d{2}:\d{2})\]\s+([^:]+):\s+(.*)$',
         re.MULTILINE
     )
     
-    # Media indicators
+    # Media indicators (multi-language support)
     MEDIA_INDICATORS = {
+        # German
         'Bild weggelassen': 'image',
         'Video weggelassen': 'video',
         'Sticker weggelassen': 'sticker',
@@ -50,6 +51,17 @@ class WhatsAppChat:
         'Dokument weggelassen': 'document',
         'GIF weggelassen': 'gif',
         'Standort:': 'location',
+        # English
+        'image omitted': 'image',
+        'video omitted': 'video',
+        'sticker omitted': 'sticker',
+        'audio omitted': 'audio',
+        'document omitted': 'document',
+        'GIF omitted': 'gif',
+        'Location:': 'location',
+        # Android English generic
+        '<Media omitted>': 'media',
+        # Generic
         '<attached:': 'attachment'
     }
     
@@ -72,14 +84,75 @@ class WhatsAppChat:
         with open(self.filepath, 'r', encoding='utf-8') as file:
             content = file.read()
         
-        # Find all messages
-        matches = self.MESSAGE_PATTERN.finditer(content)
+        # Remove invisible Unicode characters that might interfere with parsing
+        for char in ('\u200e', '\ufeff', '\u202a', '\u202c'):
+            content = content.replace(char, '')
         
-        for match in matches:
-            date_str, time_str, sender, message_content = match.groups()
-            
-            # Parse timestamp
-            timestamp = datetime.strptime(f"{date_str} {time_str}", "%d.%m.%Y %H:%M:%S")
+        # Try multiple patterns for different WhatsApp export formats
+        patterns = [
+            # Format 1: M/D/YY, HH:MM - Name: message (Android English)
+            re.compile(r'^(\d{1,2}/\d{1,2}/\d{2,4}),\s+(\d{1,2}:\d{2})\s+-\s+([^:]+?):\s+(.*)$', re.MULTILINE),
+            # Format 2: [DD.MM.YY, HH:MM:SS] Name: message (iOS/Android non-English)
+            re.compile(r'^\[?(\d{2}\.\d{2}\.\d{2,4}),\s+(\d{1,2}:\d{2}:\d{2})\]\s+([^:]+?):\s+(.*)$', re.MULTILINE),
+        ]
+        
+        best_matches = []
+        best_pattern_idx = 0
+        
+        # Find which pattern works best
+        for idx, pattern in enumerate(patterns):
+            matches = list(pattern.finditer(content))
+            if len(matches) > len(best_matches):
+                best_matches = matches
+                best_pattern_idx = idx
+        
+        if not best_matches:
+            return  # No messages found
+        
+        for match in best_matches:
+            if best_pattern_idx == 0:
+                # Android English format: M/D/YY, HH:MM - Name: message
+                date_str, time_str, sender, message_content = match.groups()
+                sender = sender.strip()
+                message_content = message_content.strip()
+                
+                # Parse date - try different formats
+                timestamp = None
+                date_formats = [
+                    "%m/%d/%y %H:%M",
+                    "%m/%d/%Y %H:%M",
+                    "%d/%m/%y %H:%M",
+                    "%d/%m/%Y %H:%M",
+                ]
+                
+                for fmt in date_formats:
+                    try:
+                        timestamp = datetime.strptime(f"{date_str} {time_str}", fmt)
+                        break
+                    except ValueError:
+                        continue
+                
+                if timestamp is None:
+                    continue
+                    
+            elif best_pattern_idx == 1:
+                # Original format: [DD.MM.YY, HH:MM:SS] Name: message
+                date_str, time_str, sender, message_content = match.groups()
+                sender = sender.strip()
+                message_content = message_content.strip()
+                
+                try:
+                    # Try YYYY format first
+                    if len(date_str.split('.')[-1]) == 4:
+                        timestamp = datetime.strptime(f"{date_str} {time_str}", "%d.%m.%Y %H:%M:%S")
+                    else:
+                        # YY format (2-digit year)
+                        timestamp = datetime.strptime(f"{date_str} {time_str}", "%d.%m.%y %H:%M:%S")
+                except ValueError:
+                    continue
+                    
+            else:
+                continue
             
             # Clean sender name
             sender = sender.strip()
@@ -123,13 +196,16 @@ class WhatsAppChat:
         """Check if message is a system message."""
         system_indicators = [
             'Ende-zu-Ende-verschlüsselt',
+            'end-to-end encrypted',
             'encrypted',
             'added',
             'left',
             'changed',
-            'created group'
+            'created group',
+            'changed their phone number',
+            'security code changed'
         ]
-        return any(indicator in content for indicator in system_indicators)
+        return any(indicator in content.lower() for indicator in system_indicators)
     
     def _extract_links(self, content: str) -> List[str]:
         """Extract URLs from message content."""
