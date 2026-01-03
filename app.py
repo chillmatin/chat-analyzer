@@ -92,9 +92,9 @@ chat = load_chat(file_content, uploaded_file.name)
 # Store chat in session state for pages to access
 st.session_state.chat = chat
 
-# Welcome message on main page
+# About section on main page
 st.markdown("""
-## Welcome to WhatsApp Chat Analyzer
+## About
 
 This app helps you analyze and visualize your WhatsApp chat data with detailed insights into:
 

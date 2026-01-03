@@ -62,6 +62,7 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 
 ## Todo
-- [X] Make project more modular. Separate classes for separate features.
 - [ ] Brainstorm new features 
 - [ ] Better parsing (different structures depending on locality and the OS)
+   - [ ] Better detailed attachments [whats_json](https://github.com/starkdmi/whats_json) i.e extracting lat,lon from location attachments
+

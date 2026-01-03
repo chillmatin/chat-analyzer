@@ -14,7 +14,7 @@ class Message:
     sender: str
     content: str
     is_media: bool = False
-    media_type: Optional[str] = None  # Sticker, Bild, Standort, etc.
+    media_type: Optional[str] = None  
     is_system: bool = False
     has_link: bool = False
     links: List[str] = field(default_factory=list)

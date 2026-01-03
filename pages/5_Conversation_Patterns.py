@@ -44,9 +44,8 @@ for participant in chat.participants:
     if response_times:
         response_data.append({
             'Participant': participant,
-            'Avg Response (min)': np.mean(response_times),
-            'Median Response (min)': np.median(response_times),
-            'Min Response (min)': np.min(response_times),
+            'Avg Response (sec)': np.mean(response_times) * 60,
+            'Median Response (sec)': np.median(response_times) * 60,
             'Max Response (min)': np.max(response_times)
         })
 
@@ -59,10 +58,10 @@ if response_data:
     with col1:
         fig = create_grouped_bar_chart(
             df_response, 'Participant',
-            ['Avg Response (min)', 'Median Response (min)'],
+            ['Avg Response (sec)', 'Median Response (sec)'],
             ['Average', 'Median'],
             ['lightblue', 'darkblue'],
-            "Average vs Median Response Time"
+            "Average vs Median Response Time (seconds)"
         )
         st.plotly_chart(fig, width="stretch")
     
