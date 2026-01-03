@@ -86,7 +86,7 @@ if uploaded_file is None:
         1. Open the chat → Tap contact name → Export Chat
         2. Choose "Without Media" and save the .txt file
         
-        *Your data is processed locally and never stored or transmitted.*
+        *Your data is not stored.*
         """)
     st.stop()
 

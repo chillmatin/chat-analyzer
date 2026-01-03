@@ -59,3 +59,8 @@ A web application to analyze and visualize your WhatsApp chat exports with inter
 ## License
 
 MIT License - See [LICENSE](LICENSE) file for details
+
+
+## Todo
+- [ ] Make project more modular. Separate classes for separate features.
+- [ ] Brainstorm new features 
