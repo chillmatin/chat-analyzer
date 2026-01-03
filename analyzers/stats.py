@@ -1,0 +1,239 @@
+"""Statistical analysis for WhatsApp chats."""
+
+import re
+from datetime import datetime
+from collections import defaultdict, Counter
+from typing import List, Dict, Optional
+import numpy as np
+from analyzers.parser import Message
+import config
+
+
+class StatsAnalyzer:
+    """Provides statistical analysis for WhatsApp messages."""
+    
+    def __init__(self, messages: List[Message], participants: set):
+        """
+        Initialize the stats analyzer.
+        
+        Args:
+            messages: List of parsed messages
+            participants: Set of participant names
+        """
+        self.messages = messages
+        self.participants = participants
+    
+    # ========================
+    # Basic Statistics
+    # ========================
+    
+    @property
+    def message_count(self) -> int:
+        """Total number of messages."""
+        return len(self.messages)
+    
+    @property
+    def media_count(self) -> int:
+        """Total number of media messages."""
+        return sum(1 for msg in self.messages if msg.is_media)
+    
+    @property
+    def start_date(self) -> Optional[datetime]:
+        """Timestamp of the first message."""
+        return self.messages[0].timestamp if self.messages else None
+    
+    @property
+    def end_date(self) -> Optional[datetime]:
+        """Timestamp of the last message."""
+        return self.messages[-1].timestamp if self.messages else None
+    
+    @property
+    def duration_days(self) -> int:
+        """Duration of the chat in days."""
+        if self.start_date and self.end_date:
+            return (self.end_date - self.start_date).days
+        return 0
+    
+    # ========================
+    # Participant Statistics
+    # ========================
+    
+    def get_message_count_by_participant(self) -> Dict[str, int]:
+        """Get message count for each participant."""
+        counts = Counter(msg.sender for msg in self.messages)
+        return dict(counts)
+    
+    def get_media_count_by_participant(self) -> Dict[str, int]:
+        """Get media message count for each participant."""
+        counts = Counter(msg.sender for msg in self.messages if msg.is_media)
+        return dict(counts)
+    
+    def get_avg_message_length_by_participant(self) -> Dict[str, float]:
+        """Get average message length for each participant."""
+        participant_messages = defaultdict(list)
+        for msg in self.messages:
+            if not msg.is_media and not msg.is_system:
+                participant_messages[msg.sender].append(len(msg.content))
+        
+        return {
+            participant: sum(lengths) / len(lengths) if lengths else 0
+            for participant, lengths in participant_messages.items()
+        }
+    
+    def get_median_message_length_by_participant(self) -> Dict[str, float]:
+        """Get median message length for each participant."""
+        participant_messages = defaultdict(list)
+        for msg in self.messages:
+            if not msg.is_media and not msg.is_system:
+                participant_messages[msg.sender].append(len(msg.content))
+        
+        return {
+            participant: float(np.median(lengths)) if lengths else 0
+            for participant, lengths in participant_messages.items()
+        }
+    
+    def get_most_active_participant(self) -> Optional[str]:
+        """Get the participant who sent the most messages."""
+        if not self.messages:
+            return None
+        counts = self.get_message_count_by_participant()
+        return max(counts, key=lambda x: counts[x])
+    
+    # ========================
+    # Time-based Statistics
+    # ========================
+    
+    def get_messages_by_hour(self) -> Dict[int, int]:
+        """Get message count for each hour of the day (0-23)."""
+        counts = Counter(msg.timestamp.hour for msg in self.messages)
+        return dict(sorted(counts.items()))
+    
+    def get_messages_by_day_of_week(self) -> Dict[str, int]:
+        """Get message count for each day of the week."""
+        days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        counts = Counter(days[msg.timestamp.weekday()] for msg in self.messages)
+        return dict(counts)
+    
+    def get_messages_by_month(self) -> Dict[str, int]:
+        """Get message count for each month."""
+        counts = Counter(msg.timestamp.strftime("%Y-%m") for msg in self.messages)
+        return dict(sorted(counts.items()))
+    
+    def get_messages_by_date(self) -> Dict[str, int]:
+        """Get message count for each date."""
+        counts = Counter(msg.timestamp.date() for msg in self.messages)
+        return {str(date): count for date, count in sorted(counts.items())}
+    
+    def get_most_active_hour(self) -> Optional[int]:
+        """Get the hour with most messages."""
+        hour_counts = self.get_messages_by_hour()
+        return max(hour_counts, key=lambda x: hour_counts[x]) if hour_counts else None
+    
+    def get_most_active_day(self) -> Optional[str]:
+        """Get the date with most messages."""
+        date_counts = self.get_messages_by_date()
+        return str(max(date_counts, key=lambda x: date_counts[x])) if date_counts else None
+    
+    # ========================
+    # Content Analysis
+    # ========================
+    
+    def get_media_types(self) -> Dict[str, int]:
+        """Get count of each media type."""
+        counts = Counter(msg.media_type for msg in self.messages if msg.media_type)
+        return dict(counts)
+    
+    def get_link_count(self) -> int:
+        """Get total number of links shared."""
+        return sum(len(msg.links) for msg in self.messages)
+    
+    def get_all_links(self) -> List[str]:
+        """Get all links shared in the chat."""
+        links = []
+        for msg in self.messages:
+            links.extend(msg.links)
+        return links
+    
+    def get_links_by_participant(self) -> Dict[str, List[str]]:
+        """Get all links shared by each participant."""
+        participant_links = defaultdict(list)
+        for msg in self.messages:
+            if msg.links:
+                participant_links[msg.sender].extend(msg.links)
+        return dict(participant_links)
+    
+    def get_word_frequency(self, top_n: int = 50, participant: Optional[str] = None) -> Dict[str, int]:
+        """
+        Get most frequent words in the chat.
+        
+        Args:
+            top_n: Number of top words to return
+            participant: Optional participant name to filter by
+        """
+        words = []
+        for msg in self.messages:
+            if not msg.is_media and not msg.is_system:
+                if participant is None or msg.sender == participant:
+                    words.extend(msg.content.lower().split())
+        
+        # Filter out very short words
+        words = [w for w in words if len(w) > config.MIN_WORD_LENGTH]
+        counts = Counter(words)
+        return dict(counts.most_common(top_n))
+    
+    def get_emoji_frequency(self, top_n: int = 20, participant: Optional[str] = None) -> Dict[str, int]:
+        """
+        Get most frequent emojis in the chat.
+        
+        Args:
+            top_n: Number of top emojis to return
+            participant: Optional participant name to filter by
+        """
+        emoji_pattern = re.compile(
+            "["
+            "\U0001F600-\U0001F64F"  # emoticons
+            "\U0001F300-\U0001F5FF"  # symbols & pictographs
+            "\U0001F680-\U0001F6FF"  # transport & map symbols
+            "\U0001F700-\U0001F77F"  # alchemical symbols
+            "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+            "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+            "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+            "\U0001FA00-\U0001FA6F"  # Chess Symbols
+            "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+            "\U00002702-\U000027B0"  # Dingbats
+            "\U000024C2-\U0001F251"
+            "]+"
+        )
+        
+        emojis = []
+        for msg in self.messages:
+            if participant is None or msg.sender == participant:
+                emojis.extend(emoji_pattern.findall(msg.content))
+        
+        counts = Counter(emojis)
+        return dict(counts.most_common(top_n))
+    
+    def search_messages(self, keyword: str, case_sensitive: bool = False) -> List[Message]:
+        """
+        Search for messages containing a specific keyword.
+        
+        Args:
+            keyword: The keyword to search for
+            case_sensitive: Whether the search should be case-sensitive
+        """
+        results = []
+        for msg in self.messages:
+            content = msg.content if case_sensitive else msg.content.lower()
+            search_term = keyword if case_sensitive else keyword.lower()
+            if search_term in content:
+                results.append(msg)
+        return results
+    
+    def get_messages_by_participant(self, participant: str) -> List[Message]:
+        """Get all messages from a specific participant."""
+        return [msg for msg in self.messages if msg.sender == participant]
+    
+    def get_messages_in_date_range(self, start_date: datetime, end_date: datetime) -> List[Message]:
+        """Get all messages within a date range."""
+        return [msg for msg in self.messages 
+                if start_date <= msg.timestamp <= end_date]
