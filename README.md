@@ -62,6 +62,6 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 
 ## Todo
-- [ ] Make project more modular. Separate classes for separate features.
+- [X] Make project more modular. Separate classes for separate features.
 - [ ] Brainstorm new features 
 - [ ] Better parsing (different structures depending on locality and the OS)
