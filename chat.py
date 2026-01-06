@@ -7,7 +7,7 @@ The actual implementation is delegated to specialized analyzer modules.
 
 from datetime import datetime
 from typing import List, Dict, Optional
-from analyzers import Message, ChatParser, StatsAnalyzer, PatternAnalyzer
+from analyzers import Message, ChatParser, StatsAnalyzer, PatternAnalyzer, LocationAnalyzer
 
 
 class WhatsAppChat:
@@ -44,6 +44,7 @@ class WhatsAppChat:
         # Initialize analyzers
         self._stats = StatsAnalyzer(self.messages, self.participants)
         self._patterns = PatternAnalyzer(self.messages)
+        self._location = LocationAnalyzer(self.messages)
     
     # ========================
     # Basic Statistics (delegated to StatsAnalyzer)
@@ -209,6 +210,38 @@ class WhatsAppChat:
         A conversation start is defined as a message after > 6 hours of silence.
         """
         return self._patterns.get_conversation_starters()
+    
+    # ========================
+    # Location Analysis
+    # ========================
+    
+    def get_all_locations(self) -> List[dict]:
+        """Get all location data from messages."""
+        return self._location.get_all_locations()
+    
+    def get_locations_by_participant(self) -> Dict[str, List[dict]]:
+        """Get locations grouped by participant."""
+        return self._location.get_locations_by_participant()
+    
+    def get_location_count(self) -> int:
+        """Get total number of locations shared."""
+        return self._location.get_location_count()
+    
+    def get_location_count_by_participant(self) -> Dict[str, int]:
+        """Get location count for each participant."""
+        return self._location.get_location_count_by_participant()
+    
+    def get_location_count_by_source(self) -> Dict[str, int]:
+        """Get location count by source (Google Maps, Apple Maps, Foursquare)."""
+        return self._location.get_location_count_by_source()
+    
+    def get_location_bounds(self) -> Optional[Dict[str, float]]:
+        """Get the bounding box for all locations with coordinates."""
+        return self._location.get_location_bounds()
+    
+    def get_locations_with_coords(self) -> List[dict]:
+        """Get only locations that have valid coordinates."""
+        return self._location.get_locations_with_coords()
     
     # ========================
     # Export and Display

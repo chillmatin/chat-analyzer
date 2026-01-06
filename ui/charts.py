@@ -25,6 +25,7 @@ COLOR_SCHEMES = {
     'words': 'Teal',
     'emojis': 'Plasma',
     'participants': 'RdBu',
+    'location': 'Purp',
     'github': ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39', '#0d4429']
 }
 
