@@ -5,13 +5,13 @@ A web application to analyze and visualize your WhatsApp chat exports with inter
 
 ## Features
 
-- 📊 **Interactive Visualizations** - Time series, heatmaps, GitHub-style activity calendar
-- 👥 **Participant Analysis** - Compare message counts, response times, and activity patterns
-- 📝 **Content Insights** - Most used words, emojis, and media sharing statistics
-- 🔄 **Conversation Patterns** - Response time analysis and conversation starters
-- � **Location Analysis** - Interactive maps showing shared locations from Google Maps, Apple Maps, and Foursquare
-- 📎 **Attachment Detection** - Track shared files with filename extraction
-- �🔒 **Self-hosted** - So that processing happens locally on your machine
+- **Interactive Visualizations** - Time series, heatmaps, GitHub-style activity calendar
+- **Participant Analysis** - Compare message counts, response times, and activity patterns
+- **Content Insights** - Most used words, emojis, and media sharing statistics
+- **Conversation Patterns** - Response time analysis and conversation starters
+- **Location Analysis** - Interactive maps showing shared locations from Google Maps, Apple Maps, and Foursquare
+- **Attachment Detection** - Track shared files with filename extraction
+- **Self-hosted** - So that processing happens locally on your machine
 
 ## Installation
 
@@ -64,10 +64,11 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 
 ## Todo
-- [ ] Brainstorm new features 
 - [x] Better detailed attachments - extracting lat,lon from location attachments (Google Maps, Apple Maps, Foursquare)
 - [x] Location visualization on interactive maps
 - [ ] Better parsing with [whats_json](https://github.com/starkdmi/whats_json) for handling 400+ chat format variations
-- [ ] Lexical Novelty Decay, for each user and the general
-- [ ] 
+- [ ] Ability to compare conversations
 
+
+## Ideas
+- [ ] Chat vectorization for semantic searching/retrieval
