@@ -9,9 +9,9 @@ A web application to analyze and visualize your WhatsApp chat exports with inter
 - 👥 **Participant Analysis** - Compare message counts, response times, and activity patterns
 - 📝 **Content Insights** - Most used words, emojis, and media sharing statistics
 - 🔄 **Conversation Patterns** - Response time analysis and conversation starters
-- � **Location Analysis** - Interactive maps showing shared locations from Google Maps, Apple Maps, and Foursquare
+- 📍  **Location Analysis** - Interactive maps showing shared locations from Google Maps, Apple Maps, and Foursquare
 - 📎 **Attachment Detection** - Track shared files with filename extraction
-- �🔒 **Self-hosted** - So that processing happens locally on your machine
+- 🔒 **Self-hosted** - So that processing happens locally on your machine
 
 ## Installation
 
