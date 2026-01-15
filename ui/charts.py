@@ -227,7 +227,7 @@ def create_dual_line_chart(
     height: int = 500,
     fill_y1: bool = True,
     y1_color: str = 'lightblue',
-    y2_color: str = 'darkblue'
+    y2_color: str = 'red'
 ) -> go.Figure:
     """
     Create a line chart with two Y-axis traces.
